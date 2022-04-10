@@ -21,7 +21,8 @@ import static java.lang.Integer.parseInt;
  * Manages startup/shutdown of a gRPC server.
  */
 public class GrpcServerRunner {
-    private static final Logger logger = Logger.getLogger(GrpcServerRunner.class.getName());
+    private static final Logger logger =
+            Logger.getLogger(GrpcServerRunner.class.getName());
 
     private final Supplier<Server> server;
 
@@ -34,7 +35,11 @@ public class GrpcServerRunner {
     private static Server createServer(
             ImmutableList<ServerServiceDefinition> serviceDefinitions, int port) {
         try {
-            return ServerBuilder.forPort(port).addServices(serviceDefinitions).build().start();
+            return ServerBuilder
+                    .forPort(port)
+                    .addServices(serviceDefinitions)
+                    .build()
+                    .start();
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
