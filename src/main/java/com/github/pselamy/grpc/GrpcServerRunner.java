@@ -76,10 +76,12 @@ public class GrpcServerRunner {
     }
 
     static class PortSupplier implements Supplier<Integer> {
+        private static final String DEFAULT_PORT = "50051";
+
         @Override
         public Integer get() {
             String port = System.getenv()
-                    .getOrDefault("PORT", "50051");
+                    .getOrDefault("PORT", DEFAULT_PORT);
             return parseInt(port);
         }
     }
