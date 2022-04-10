@@ -1,5 +1,6 @@
 java_library(
     name = "grpc_server_runner",
+    visibility = ["//visibility:public"],
     srcs = ["GrpcServerRunner.java"],
     deps = [
         "@maven//:com_google_guava_guava",
@@ -10,6 +11,7 @@ java_library(
 
 java_library(
     name = "grpc_server_runner_module",
+    visibility = ["//visibility:public"],
     srcs = ["GrpcServerRunnerModule.java"],
     deps = [
         "@maven//:com_google_guava_guava",
