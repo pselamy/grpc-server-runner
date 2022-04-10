@@ -1,4 +1,4 @@
-package com.verlumen.tradestar.candles;
+package com.github.pselamy.grpc;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
