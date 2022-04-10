@@ -1,5 +1,6 @@
 package com.github.pselamy.grpc;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import io.grpc.BindableService;
@@ -21,29 +22,30 @@ import static java.lang.Integer.parseInt;
 public class GrpcServerRunner {
     private static final Logger logger = Logger.getLogger(GrpcServerRunner.class.getName());
 
-    private final Server server;
+    private final Supplier<Server> server;
 
-    @Inject
-    GrpcServerRunner(PortSupplier portSupplier, Set<BindableService> services) {
-        this.server = ServerBuilder
-                .forPort(portSupplier.get())
-                .addServices(getServiceDefinitions(services))
-                .build();
+    private static Server createServer(int port, ImmutableList<ServerServiceDefinition> serviceDefinitions) {
+        return ServerBuilder.forPort(port).addServices(serviceDefinitions).build().start();
     }
-
-    private ImmutableList<ServerServiceDefinition> getServiceDefinitions(Set<BindableService> services) {
+    
+    private static ImmutableList<ServerServiceDefinition> getServiceDefinitions(Set<BindableService> services) {
         return services.stream()
                 .map(BindableService::bindService)
                 .collect(toImmutableList());
     }
+    
+    @Inject
+    GrpcServerRunner(PortSupplier portSupplier, Set<BindableService> services) {
+        this.server = Suppliers.memoize(() -> createServer(portSupplier.get(), getServiceDefinitions(services));
+    }
 
     public void run() throws InterruptedException {
         start();
-        server.awaitTermination();
+        server.get().awaitTermination();
     }
 
     private void start() {
-        logger.info("Server started, listening on " + server.getPort());
+        logger.info("Server started, listening on " + server.get().getPort());
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             // Use stderr here since the logger may have been reset by its JVM shutdown hook.
             System.err.println("*** shutting down gRPC server since JVM is shutting down");
@@ -57,7 +59,7 @@ public class GrpcServerRunner {
     }
 
     private void stop() throws InterruptedException {
-        server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
+        server.get().shutdown().awaitTermination(30, TimeUnit.SECONDS);
     }
 
     static class PortSupplier implements Supplier<Integer> {
