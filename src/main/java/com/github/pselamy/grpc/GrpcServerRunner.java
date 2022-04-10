@@ -8,6 +8,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerServiceDefinition;
 
+import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -24,19 +25,26 @@ public class GrpcServerRunner {
 
     private final Supplier<Server> server;
 
-    private static Server createServer(int port, ImmutableList<ServerServiceDefinition> serviceDefinitions) {
-        return ServerBuilder.forPort(port).addServices(serviceDefinitions).build().start();
+    @Inject
+    GrpcServerRunner(PortSupplier portSupplier, Set<BindableService> services) {
+        this.server = Suppliers.memoize(() ->
+                createServer(bindServices(services), portSupplier.get()));
     }
-    
-    private static ImmutableList<ServerServiceDefinition> getServiceDefinitions(Set<BindableService> services) {
+
+    private static Server createServer(
+            ImmutableList<ServerServiceDefinition> serviceDefinitions, int port) {
+        try {
+            return ServerBuilder.forPort(port).addServices(serviceDefinitions).build().start();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static ImmutableList<ServerServiceDefinition> bindServices(
+            Set<BindableService> services) {
         return services.stream()
                 .map(BindableService::bindService)
                 .collect(toImmutableList());
-    }
-    
-    @Inject
-    GrpcServerRunner(PortSupplier portSupplier, Set<BindableService> services) {
-        this.server = Suppliers.memoize(() -> createServer(portSupplier.get(), getServiceDefinitions(services));
     }
 
     public void run() throws InterruptedException {
