@@ -1,5 +1,7 @@
 workspace(name = "grpc_server_runner")
 
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
 git_repository(
     name = "rules_jvm_external",
     remote = "https://github.com/bazelbuild/rules_jvm_external",
