@@ -7,7 +7,7 @@ import io.grpc.BindableService;
 
 import java.util.Set;
 
-public class GrpcServerRunnerModule extends AbstractModule {
+class GrpcServerRunnerModule extends AbstractModule {
     private static final Key<Set<BindableService>> BINDABLE_SERVICE_KEY =
             Key.get(new TypeLiteral<Set<BindableService>>() {
     });

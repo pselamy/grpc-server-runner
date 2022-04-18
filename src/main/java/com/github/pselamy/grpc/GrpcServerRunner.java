@@ -2,7 +2,9 @@ package com.github.pselamy.grpc;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Guice;
 import com.google.inject.Inject;
+import com.google.inject.Module;
 import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -15,6 +17,7 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.inject.util.Modules.combine;
 import static java.lang.Integer.parseInt;
 
 /**
@@ -52,13 +55,22 @@ public class GrpcServerRunner {
                 .collect(toImmutableList());
     }
 
-    public void run() throws InterruptedException {
-        start();
-        server.get().awaitTermination();
+    public static void run(Module... modules) throws InterruptedException {
+        Module module = combine(combine(modules), new GrpcServerRunnerModule());
+        run(Guice.createInjector(module).getInstance(GrpcServerRunner.class));
+    }
+
+    private static void run(GrpcServerRunner runner) throws InterruptedException {
+        runner.start();
+        runner.server().awaitTermination();
+    }
+
+    private Server server() {
+        return server.get();
     }
 
     private void start() {
-        logger.info("Server started, listening on " + server.get().getPort());
+        logger.info("Server started, listening on " + server().getPort());
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             // Use stderr here since the logger may have been reset by its JVM shutdown hook.
             System.err.println("*** shutting down gRPC server since JVM is shutting down");
@@ -72,7 +84,7 @@ public class GrpcServerRunner {
     }
 
     private void stop() throws InterruptedException {
-        server.get().shutdown().awaitTermination(30, TimeUnit.SECONDS);
+        server().shutdown().awaitTermination(30, TimeUnit.SECONDS);
     }
 
     static class PortSupplier implements Supplier<Integer> {
